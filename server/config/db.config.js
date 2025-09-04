@@ -7,7 +7,7 @@ const dbConfig = {
   PASSWORD: process.env.PASSWORD,
   DB: process.env.DB,
   PORT: process.env.DBPORT,
-  DIALECT: process.env.DIALECT,
+  DIALECT: process.env.DIALECT, 
   pool: {
     max: 5,
     min: 0,

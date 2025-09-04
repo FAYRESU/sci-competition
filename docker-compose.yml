@@ -6,21 +6,21 @@ services:
       context: ./server
       dockerfile: Dockerfile.server
     ports:
-      - "3000:5000" #ซ้าย pc localhost ในเครื่อง ขวาคือ server docker
+      - "5000:5000" #ซ้าย pc localhost ในเครื่อง ขวาคือ server docker
     volumes:
-      - "./server:./app"
+      - "./server:/app"
       # เข้าถึงตัว node module ได้
       - "/app/node_modules"
       #ใส่ไม่ใส่ก็ได้
-    # command: nodemon --legacy-watch index.js
-    # restart:
-    #   always
+    command: nodemon --legacy-watch index.js
+    restart:
+      always
       #postgres ทำทั้งหมดให้รู้จักกัน โดยไม่ต้องระบุหมายเลข IP
       #postgres:// คือ protocol
       #username:password หลัง @ location db port:5432 หลัง / name db
     environment:
-    #DATABASE_URL = postgres://user:pass@server:port/databse name
-    #เรียกว่า connection string
+      #DATABASE_URL = postgres://user:pass@server:port/databse name
+      #เรียกว่า connection string
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/app_db
       - HOST=db
       - USER=postgres

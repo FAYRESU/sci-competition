@@ -3,62 +3,64 @@ import { DataTypes } from "sequelize";
 import sequelize from "./db.js";
 
 const Activity = sequelize.define("activity", {
-  id: {
-    type: DataTypes.BIGINT,
-    primaryKey: true,
-    autoIncrement: true,
-  },
   name: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   description: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   type: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   level: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   team_size: {
-    type: DataTypes.INTEGER, 
-    allowNull: false,
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    validate: {
+      min: 1,
+    },
   },
   date: {
-    type: DataTypes.DATE, 
-    allowNull: false,
+    type: DataTypes.DATE,
+    allowNull: true,
   },
   location: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   reg_open: {
-    type: DataTypes.DATE, 
-    allowNull: false,
+    type: DataTypes.DATE,
+    allowNull: true,
   },
   reg_close: {
-    type: DataTypes.DATE, 
-    allowNull: false,
+    type: DataTypes.DATE,
+    allowNull: true,
   },
   contact_name: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   contact_phone: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   contact_email: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
+    validate: {
+      isEmail: true,
+    },
   },
   status: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: DataTypes.ENUM("draft", "open", "closed", "in_progress", "completed"),
+    allowNull: true,
+    defaultValue: "draft",
   },
 });
 

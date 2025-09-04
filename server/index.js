@@ -4,18 +4,32 @@ import dotenv from "dotenv";
 dotenv.config();
 import cors from "cors";
 const PORT = process.env.PORT || 5000;
-// import ActivityRouter from "./routers/activity.routers.js";
-// import db from "./models/index.js";
+import authRouter from "./routers/auth.router.js";
+import db from "./models/index.js";
+const FRONTEND_URL = process.env.FRONTEND_URL;
+import ActivityRouter from "./routers/activity.router.js"
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// const Role = db.Role;
+const Role = db.Role;
 // Function to initialize roles
 // const initRole = async () => {
 //   try {
-//     await Role.findOrCreate({ where: { id: 1 }, defaults: { roleName: "user" } });
-//     await Role.findOrCreate({ where: { id: 2 }, defaults: { roleName: "moderator" } });
-//     await Role.findOrCreate({ where: { id: 3 }, defaults: { roleName: "admin" } });
+//     await Role.findOrCreate({
+//       where: { id: 1 },
+//       defaults: { roleName: "admin" },
+//     });
+//     await Role.findOrCreate({
+//       where: { id: 2 },
+//       defaults: { roleName: "manager" },
+//     });
+//     await Role.findOrCreate({
+//       where: { id: 3 },
+//       defaults: { roleName: "teacher" },
+//     });
+//     await Role.findOrCreate({
+//       where: { id: 4 },
+//       defaults: { roleName: "judge" },
+//     });
 //     console.log("Initial roles created");
 //   } catch (err) {
 //     console.error("Error initializing roles:", err);
@@ -24,9 +38,9 @@ app.use(express.urlencoded({ extended: true }));
 // initRole();
 
 // Sync database
-// db.sequelize.sync({ force: false }).then(() => {
-//   console.log("create table user_roles");
-// });
+db.sequelize.sync({ force: false }).then(() => {
+  console.log("create table user_roles");
+});
 
 // Homepage
 app.get("/", (req, res) => {
@@ -36,14 +50,16 @@ app.get("/", (req, res) => {
 // Enable CORS
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+    origin: ["http://localhost:5173", "http://127.0.0.1:5173", FRONTEND_URL],
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "x-access-token"],
   })
 );
 
 // Routers
-// app.use("/api/v1/activity", ActivityRouter);
+
+app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/auth", ActivityRouter);
 
 // Start server
 app.listen(PORT, () => {
