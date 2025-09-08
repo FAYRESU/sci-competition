@@ -31,9 +31,7 @@ const isAdmin = (req, res, next) => {
           return;
         }
       }
-      return res
-        .status(401)
-        .send({ message: "Require Admin Role!" });
+      return res.status(401).send({ message: "Require Admin Role!" });
     });
   });
 };
@@ -54,5 +52,20 @@ const isModOrAdmin = (req, res, next) => {
   });
 };
 
-const authJwt = { verifyToken, isAdmin, isModOrAdmin };
+const isManager = (req, res, next) => {
+  User.findByPk(req.username).then((user) => {
+    user.getRoles().then((roles) => {
+      for (let i = 0; i < roles.length; i++) {
+        if (roles[i].name === "manager") {
+          next();
+          return;
+        }
+      }
+      return res.status(401).send({ message: "Require Manager Role!" });
+    });
+  });
+};
+
+export { verifyToken, isAdmin, isManager };
+const authJwt = { verifyToken, isAdmin, isModOrAdmin, isManager };
 export default authJwt;

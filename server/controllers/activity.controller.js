@@ -50,9 +50,11 @@ activityControllers.createActivity = async (req, res) => {
       .json({ message: "กิจกรรมถูกสร้างเรียบร้อยแล้ว", activity: newActivity });
   } catch (error) {
     console.error("Error creating activity:", error);
-    res
-      .status(500)
-      .json({ message: "Something went wrong while creating the activity" });
+    res.status(500).json({
+      message: "Something went wrong while creating the activity",
+      error: error.message,
+      errors: error.errors || null, // Sequelize จะเก็บ validation errors ตรงนี้
+    });
   }
 };
 

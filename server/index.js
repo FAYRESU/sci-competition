@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 5000;
 import authRouter from "./routers/auth.router.js";
 import db from "./models/index.js";
 const FRONTEND_URL = process.env.FRONTEND_URL;
-import ActivityRouter from "./routers/activity.router.js"
+import ActivityRouter from "./routers/activity.router.js";
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const Role = db.Role;
@@ -59,7 +59,7 @@ app.use(
 // Routers
 
 app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/auth", ActivityRouter);
+app.use("/api/v1/", ActivityRouter);
 
 // Start server
 app.listen(PORT, () => {
