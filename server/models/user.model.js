@@ -3,7 +3,7 @@ import { DataTypes } from "sequelize"; // <-- this is the missing piece
 import bcrypt from "bcryptjs";
 
 const User = sequelize.define(
-  "user",
+  "users",
   {
     id: {
       type: DataTypes.STRING,
@@ -58,8 +58,9 @@ const User = sequelize.define(
     },
   }
 );
-User.prototype.comparePassword = async function (candidatePassword){
+
+User.prototype.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
-;}
+};
 
 export default User;

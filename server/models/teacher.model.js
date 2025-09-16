@@ -1,28 +1,33 @@
+import sequelize from "./db.js"; // หรือไฟล์ที่คุณเก็บ instance ไว้
 import User from "./user.model.js";
-import { DataTypes } from "sequelize"; // <-- this is the missing piece
+import { DataTypes } from "sequelize";
 
-const Teacher = User.init({
-    school:{
-        type:DataTypes.STRING,
-        allowNull:false
+const Teacher = User.init(
+  {
+    school: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
-    phone:{
-        type:DataTypes.STRING,
-        allowNull:false,
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
-},{
-        scopes: {
-            defaultScope: {
-                where:{
-                    type:"teacher",
-                },
-            },
+  },
+  {
+    sequelize,
+    scopes: {
+      defaultScope: {
+        where: {
+          type: "teacher",
         },
+      },
     },
-{
-    beforeCreate: (teacher) => {
+    hooks: {
+      beforeCreate: (teacher) => {
         teacher.type = "teacher";
+      },
     },
-});
+  }
+);
 
 export default Teacher;

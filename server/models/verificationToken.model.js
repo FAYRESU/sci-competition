@@ -1,28 +1,30 @@
 import { DataTypes } from "sequelize";
 import sequelize from "./db.js";
+import User from "./user.model.js";
 
-const VerificationToken = sequelize.define("verificationToken", {
-    id: {
-        type: DataTypes.INTEGER,
-        allowNull: false, 
-        primaryKey: true,
+const VerificationToken = sequelize.define("verificationTokens", {
+  id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  token: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    reference: {
+      model: User,
+      key: "id",
     },
-    token: {
-        type: DataTypes.STRING,
-        allowNull:false,
-        unique: true,
-    },
-    userId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        reference: {
-            model: "user",
-            key: "id",
-        },
-    },
-    expireAt: {
-        type: DataTypes.DATE,
-        allowNull:false
-    }
+  },
+  expireAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+  },
 });
 export default VerificationToken;
