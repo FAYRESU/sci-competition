@@ -3,6 +3,7 @@ import authConfig from "../config/auth.config.js";
 import db from "../models/index.js"; //index เป็นคนชี้แจง
 import crypto from "crypto";
 import { sendVerificationEmail } from "../utils/email.js";
+import path from "path";
 
 const User = db.User; //ข้างหน้าคือ class
 
@@ -101,8 +102,50 @@ const signUp = async (req, res) => {
   }
 };
 
+const verifyEmail = async (req, res) => {
+  const { token } = req.params;
+  if (!token) {
+    return res.status(400).send({ message: "Token is missing!" });
+  }
+  try {
+    const verificationToken = await db.VerificationToken.findOne({
+      where: { token: token },
+    });
+    if (!verificationToken) {
+      return res.status(400).send({ message: "Invalid or expired token!" });
+    }
+    //Check if token is expired
+    if (new Date() > verificationToken.expiredAt) {
+      await verificationToken.destroy();
+      return res.status(400).send({
+        message: "Versification token has expired. Please request a new one.",
+      });
+    }
+    //ทำการดึง user มาก่อน
+    const user = await User.findByPk(verificationToken.userId);
+    if (!user) {
+      return res.status(404).send({ message: "User not found!" });
+    }
+    //ตั๋วยังไม่หมดอายุ และ user มีอยู่ ต้องเปลี่ยนสถานะ
+    await user.update({ isVerified: true });
+    await verificationToken.destroy(); //ลบ token ทิ้ง ใช้แบบ one time
+    //ต้องรีเทิร์นหน้า web views
+    const htmlPath = path.join(
+      process.cwd(),
+      "views", //ที่อยู่ project
+      "verification-success.html"
+    ); //views/verification-success.html
+    res.sendFile(htmlPath);
+  } catch (error) {
+    return res.status(500).send({
+      message: error.message || "Some error occurred while verifying user",
+    });
+  }
+};
+
 const authController = {
   signUp,
+  verifyEmail,
 };
 
 export default authController;
