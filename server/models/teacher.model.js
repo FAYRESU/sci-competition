@@ -1,4 +1,3 @@
-import sequelize from "./db.js"; // หรือไฟล์ที่คุณเก็บ instance ไว้
 import User from "./user.model.js";
 import { DataTypes } from "sequelize";
 
@@ -14,7 +13,6 @@ const Teacher = User.init(
     },
   },
   {
-    sequelize,
     scopes: {
       defaultScope: {
         where: {

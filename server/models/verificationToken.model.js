@@ -5,7 +5,6 @@ import User from "./user.model.js";
 const VerificationToken = sequelize.define("verificationTokens", {
   id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
     primaryKey: true,
     autoIncrement: true,
   },
@@ -22,7 +21,7 @@ const VerificationToken = sequelize.define("verificationTokens", {
       key: "id",
     },
   },
-  expireAt: {
+  expiredAt: {
     type: DataTypes.DATE,
     allowNull: false,
   },

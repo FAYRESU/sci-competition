@@ -16,10 +16,10 @@ const initDatabase = async () => {
   try {
     await db.sequelize.authenticate();
     console.log("Database connection established successfully!");
-    if (NODE_ENV === "development") {
+    // if (NODE_ENV === "development") {
       await db.sequelize.sync({ alter: true });
       console.log("database synced in development mode");
-    }
+    // }
   } catch (error) {
     console.log("Unable to connect to database", error);
   }

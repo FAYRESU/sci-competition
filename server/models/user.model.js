@@ -1,14 +1,14 @@
-import sequelize from "./db.js";
 import { DataTypes } from "sequelize"; // <-- this is the missing piece
 import bcrypt from "bcryptjs";
+import sequelize from "./db.js";
 
 const User = sequelize.define(
   "users",
   {
     id: {
       type: DataTypes.STRING,
-      allowNull: false,
       primaryKey: true,
+      autoIncrement: true,
     },
     name: {
       type: DataTypes.STRING,
@@ -29,6 +29,15 @@ const User = sequelize.define(
     type: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    //Teacher attribute
+    school: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     isVerified: {
       type: DataTypes.BOOLEAN,

@@ -12,7 +12,7 @@ const signUp = async (req, res) => {
   try {
     //Check varidation request
     if (!email || !password || !type || !name) {
-      return res  
+      return res
         .status(400)
         .send({ message: "Email, Password, Type and Name are reqiured !" });
     }
@@ -49,6 +49,7 @@ const signUp = async (req, res) => {
       email: email,
       password: password,
       type: type,
+      isVerified: false,
     };
     if (type === "teacher") {
       userData.school = school;
@@ -68,7 +69,7 @@ const signUp = async (req, res) => {
         const verification = await db.VerificationToken.create({
           token,
           userId: user.id,
-          expiredAt: new Date(DataTransfer.now() + 24 * 60 * 60 * 1000), //24 h
+          expiredAt: new Date(Date.now() + 24 * 60 * 60 * 1000), //24 h
         });
         console.log("Verification token created", verification);
 
