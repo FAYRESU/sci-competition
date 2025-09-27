@@ -1,31 +1,31 @@
 import React, { useEffect, useState } from "react";
-import ActivitiesService from "../services/activity.service";
+import ActivityService from "../services/activity.service";
 import ActivityCard from "../components/ActivityCard";
 
 const Activities = () => {
-  const [activities, setActivities] = useState([]);
+  const [activites, setActivities] = useState([]);
+  console.log(activites);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await ActivitiesService.getAllActivities();
+        const response = await ActivityService.getAllActivities();
         if (response.status === 200) {
           setActivities(response.data);
         }
       } catch (error) {
-        console.log("fetching error", error);
+        console.log("fetching data error", error);
       }
     };
     fetchData();
   }, []);
-
   return (
     <div>
-      {activities.length === 0 && <p>ยังไม่มีกิจกรรม</p>}
-      {activities.length > 0 &&
-        activities.map((activity) => (
-          <ActivityCard key={activity.id} activity={activity} />
-        ))}
+      {activites.length === 0 && <p>ยังไม่มีกิจกรรม</p>}
+      {activites.length > 0 &&
+        activites.map((activity) => {
+          return <ActivityCard activity={activity} />;
+        })}
     </div>
   );
 };
