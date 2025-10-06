@@ -3,6 +3,7 @@ import AuthService from "../services/auth.service";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router";
 import { useAuthContext } from "../context/AuthContext";
+import { FiMail, FiLock } from "react-icons/fi";
 
 const Login = () => {
   const [logInData, setLogInData] = useState({
@@ -51,46 +52,57 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-100">
-      <div className="card w-full max-w-md shadow-xl bg-white p-8">
-        <h1 className="text-3xl font-bold text-center text-blue-600 mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-white to-red-50">
+      <div className="card w-full max-w-md shadow-2xl bg-white p-10 rounded-2xl border border-pink-200">
+        <h1 className="text-4xl font-extrabold text-center text-red-600 mb-8">
           Login
         </h1>
 
         {/* Email */}
-        <label className="form-control w-full mb-4">
-          <div className="label">
-            <span className="label-text text-blue-700">Email</span>
-          </div>
+        <div className="form-control w-full mb-5 relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-red-400">
+            <FiMail size={20} />
+          </span>
           <input
             type="text"
             name="email"
             placeholder="Enter your email"
-            className="input input-bordered w-full"
+            className="input input-bordered w-full pl-10 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 rounded-lg transition-shadow duration-300 shadow-sm hover:shadow-md"
             value={logInData.email}
             onChange={handleChange}
           />
-        </label>
+        </div>
 
         {/* Password */}
-        <label className="form-control w-full mb-6">
-          <div className="label">
-            <span className="label-text text-blue-700">Password</span>
-          </div>
+        <div className="form-control w-full mb-6 relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-red-400">
+            <FiLock size={20} />
+          </span>
           <input
             type="password"
             name="password"
             placeholder="Enter your password"
-            className="input input-bordered w-full"
+            className="input input-bordered w-full pl-10 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 rounded-lg transition-shadow duration-300 shadow-sm hover:shadow-md"
             value={logInData.password}
             onChange={handleChange}
           />
-        </label>
+        </div>
 
         {/* Submit Button */}
-        <button className="btn btn-primary w-full" onClick={handleSubmit}>
+        <button
+          className="btn w-full bg-red-500 hover:bg-pink-400 text-white font-bold rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"
+          onClick={handleSubmit}
+        >
           Login
         </button>
+
+        {/* Optional: Register link */}
+        <p className="text-center text-sm text-red-600 mt-4">
+          Don't have an account?{" "}
+          <a href="/register" className="underline hover:text-pink-500">
+            Register
+          </a>
+        </p>
       </div>
     </div>
   );

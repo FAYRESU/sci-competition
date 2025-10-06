@@ -15,8 +15,8 @@ const Update = () => {
     team_size: 1,
     date: "",
     location: "",
-    reg_open: Date,
-    reg_close: Date,
+    reg_open: "",
+    reg_close: "",
     contact_name: "",
     contact_phone: "",
     contact_email: "",
@@ -26,21 +26,19 @@ const Update = () => {
   useEffect(() => {
     const fetchActivity = async () => {
       try {
-        const updateActivity = await ActivitiesService.getActivitiesById(id);
-        if (updateActivity.status === 200) {
-          setActivity(updateActivity.data);
-        } else {
+        const res = await ActivitiesService.getActivitiesById(id);
+        if (res.status === 200) setActivity(res.data);
+        else
           Swal.fire({
             title: "Activity Not Found",
             icon: "error",
-            text: `No Activity found with ID: ${id}`,
+            text: `No activity found with ID: ${id}`,
           });
-        }
-      } catch (error) {
+      } catch (err) {
         Swal.fire({
-          title: "Error fetching activities",
+          title: "Error fetching activity",
           icon: "error",
-          text: error.message,
+          text: err.message,
         });
       }
     };
@@ -55,240 +53,207 @@ const Update = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const updateActivity = await ActivitiesService.UpdateActivities(
-        id,
-        activity
-      );
-      if (updateActivity.status === 200) {
-        setActivity(updateActivity.data);
+      const res = await ActivitiesService.UpdateActivities(id, activity);
+      if (res.status === 200) {
         Swal.fire({
           title: "Activity Updated",
           icon: "success",
           text: "Successfully updated activity.",
-        }).then(() => {
-          navigate("/");
-        });
+        }).then(() => navigate("/"));
       }
-    } catch (error) {
+    } catch (err) {
       Swal.fire({
-        title: "Error updating activity",
+        title: "Update Failed",
         icon: "error",
-        text: error.message,
+        text: err.message,
       });
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-blue-200 to-indigo-200 flex items-center justify-center px-4">
-      <div className="card w-full max-w-2xl shadow-2xl bg-white rounded-2xl border border-blue-300">
-        <div className="card-body space-y-6">
-          <h1 className="text-3xl font-extrabold text-center text-blue-700 drop-shadow">
-            ➕ แก้ไขข้อมูลกิจกรรมวันวิทยาศาสตร์
-          </h1>
-          <p className="text-center text-gray-600 text-sm">
-            แก้ไขข้อมูลกิจกรรมให้ครบถ้วน
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-white to-red-50 px-4 pt-24">
+      <div className="card w-full max-w-3xl shadow-2xl bg-white rounded-3xl border border-pink-200 p-10">
+        <h1 className="text-3xl font-extrabold text-center text-red-600 mb-2">
+          ✏️ แก้ไขกิจกรรม
+        </h1>
+        <p className="text-center text-gray-500 mb-8">
+          ปรับปรุงข้อมูลกิจกรรมให้ครบถ้วน
+        </p>
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            {/* Name */}
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          {/* Name */}
+          <div className="form-control">
+            <label className="label font-semibold text-red-600">ชื่อกิจกรรม</label>
+            <input
+              type="text"
+              name="name"
+              placeholder="ชื่อกิจกรรม"
+              className="input input-bordered rounded-xl focus:ring-2 focus:ring-pink-400 transition-shadow duration-300 shadow-sm"
+              value={activity.name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          {/* Description */}
+          <div className="form-control">
+            <label className="label font-semibold text-red-600">รายละเอียดกิจกรรม</label>
+            <textarea
+              name="description"
+              placeholder="รายละเอียด"
+              className="textarea textarea-bordered rounded-xl focus:ring-2 focus:ring-pink-400 transition-shadow duration-300 shadow-sm"
+              value={activity.description}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          {/* Type & Level */}
+          <div className="grid md:grid-cols-2 gap-4">
             <div className="form-control">
-              <label className="label font-semibold text-blue-800">
-                ชื่อกิจกรรม
-              </label>
+              <label className="label font-semibold text-red-600">ประเภทกิจกรรม</label>
               <input
                 type="text"
-                placeholder="ชื่อกิจกรรม"
-                className="input input-bordered input-primary rounded-xl"
-                name="name"
+                name="type"
+                className="input input-bordered rounded-xl focus:ring-2 focus:ring-pink-400 transition-shadow duration-300 shadow-sm"
+                value={activity.type}
                 onChange={handleChange}
-                value={activity.name}
                 required
               />
             </div>
-
-            {/* Description */}
             <div className="form-control">
-              <label className="label font-semibold text-blue-800">
-                รายละเอียดกิจกรรม
-              </label>
-              <textarea
-                className="textarea textarea-bordered textarea-primary rounded-xl"
-                placeholder="รายละเอียด"
-                name="description"
-                onChange={handleChange}
-                value={activity.description}
-                required
-              />
-            </div>
-
-            {/* Type & Level */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="form-control">
-                <label className="label font-semibold text-blue-800">
-                  ประเภทกิจกรรม
-                </label>
-                <input
-                  type="text"
-                  className="input input-bordered input-primary rounded-xl"
-                  name="type"
-                  onChange={handleChange}
-                  value={activity.type}
-                  required
-                />
-              </div>
-              <div className="form-control">
-                <label className="label font-semibold text-blue-800">
-                  ระดับ
-                </label>
-                <input
-                  type="text"
-                  className="input input-bordered input-primary rounded-xl"
-                  name="level"
-                  onChange={handleChange}
-                  value={activity.level}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Team Size & Date */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="form-control">
-                <label className="label font-semibold text-blue-800">
-                  จำนวนสมาชิกต่อทีม
-                </label>
-                <input
-                  type="number"
-                  className="input input-bordered input-primary rounded-xl"
-                  name="team_size"
-                  min={1}
-                  onChange={handleChange}
-                  value={activity.team_size}
-                  required
-                />
-              </div>
-              <div className="form-control">
-                <label className="label font-semibold text-blue-800">
-                  วันที่แข่งขัน
-                </label>
-                <input
-                  type="date"
-                  className="input input-bordered input-primary rounded-xl"
-                  name="date"
-                  onChange={handleChange}
-                  value={activity.date}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Location */}
-            <div className="form-control">
-              <label className="label font-semibold text-blue-800">
-                สถานที่จัดกิจกรรม
-              </label>
+              <label className="label font-semibold text-red-600">ระดับ</label>
               <input
                 type="text"
-                className="input input-bordered input-primary rounded-xl"
-                name="location"
+                name="level"
+                className="input input-bordered rounded-xl focus:ring-2 focus:ring-pink-400 transition-shadow duration-300 shadow-sm"
+                value={activity.level}
                 onChange={handleChange}
-                value={activity.location}
                 required
               />
             </div>
+          </div>
 
-            {/* Register Date Range */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="form-control">
-                <label className="label font-semibold text-blue-800">
-                  เปิดรับสมัคร
-                </label>
-                <input
-                  type="datetime-local"
-                  className="input input-bordered input-primary rounded-xl"
-                  name="reg_open"
-                  onChange={handleChange}
-                  value={activity.reg_open}
-                  required
-                />
-              </div>
-              <div className="form-control">
-                <label className="label font-semibold text-blue-800">
-                  ปิดรับสมัคร
-                </label>
-                <input
-                  type="datetime-local"
-                  className="input input-bordered input-primary rounded-xl"
-                  name="reg_close"
-                  onChange={handleChange}
-                  value={activity.reg_close}
-                  required
-                />
-              </div>
+          {/* Team & Date */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="form-control">
+              <label className="label font-semibold text-red-600">จำนวนสมาชิกต่อทีม</label>
+              <input
+                type="number"
+                name="team_size"
+                min={1}
+                className="input input-bordered rounded-xl focus:ring-2 focus:ring-pink-400 transition-shadow duration-300 shadow-sm"
+                value={activity.team_size}
+                onChange={handleChange}
+                required
+              />
             </div>
+            <div className="form-control">
+              <label className="label font-semibold text-red-600">วันที่แข่งขัน</label>
+              <input
+                type="date"
+                name="date"
+                className="input input-bordered rounded-xl focus:ring-2 focus:ring-pink-400 transition-shadow duration-300 shadow-sm"
+                value={activity.date}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
 
-            {/* Contact */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="form-control">
-                <label className="label font-semibold text-blue-800">
-                  ผู้ติดต่อ
-                </label>
-                <input
-                  type="text"
-                  className="input input-bordered input-primary rounded-xl"
-                  name="contact_name"
-                  onChange={handleChange}
-                  value={activity.contact_name}
-                  required
-                />
-              </div>
-              <div className="form-control">
-                <label className="label font-semibold text-blue-800">
-                  เบอร์โทร
-                </label>
-                <input
-                  type="text"
-                  className="input input-bordered input-primary rounded-xl"
-                  name="contact_phone"
-                  onChange={handleChange}
-                  value={activity.contact_phone}
-                  required
-                />
-              </div>
-              <div className="form-control">
-                <label className="label font-semibold text-blue-800">
-                  อีเมล
-                </label>
-                <input
-                  type="email"
-                  className="input input-bordered input-primary rounded-xl"
-                  name="contact_email"
-                  onChange={handleChange}
-                  value={activity.contact_email}
-                  required
-                />
-              </div>
-            </div>
+          {/* Location */}
+          <div className="form-control">
+            <label className="label font-semibold text-red-600">สถานที่จัดกิจกรรม</label>
+            <input
+              type="text"
+              name="location"
+              className="input input-bordered rounded-xl focus:ring-2 focus:ring-pink-400 transition-shadow duration-300 shadow-sm"
+              value={activity.location}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-            {/* Buttons */}
-            <div className="flex justify-center items-center mt-6 gap-4">
-              <button
-                type="submit"
-                className="btn btn-primary w-32 rounded-xl shadow-md hover:scale-105 transition-transform duration-200 text-white"
-                onChange={handleSubmit}
-              >
-                ✅ แก้ไข
-              </button>
-              <button
-                type="button"
-                className="btn btn-outline btn-error w-32 rounded-xl shadow-md hover:scale-105 transition-transform duration-200"
-                onClick={() => navigate("/")}
-              >
-                ❌ ยกเลิก
-              </button>
+          {/* Registration */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="form-control">
+              <label className="label font-semibold text-red-600">เปิดรับสมัคร</label>
+              <input
+                type="datetime-local"
+                name="reg_open"
+                className="input input-bordered rounded-xl focus:ring-2 focus:ring-pink-400 transition-shadow duration-300 shadow-sm"
+                value={activity.reg_open}
+                onChange={handleChange}
+                required
+              />
             </div>
-          </form>
-        </div>
+            <div className="form-control">
+              <label className="label font-semibold text-red-600">ปิดรับสมัคร</label>
+              <input
+                type="datetime-local"
+                name="reg_close"
+                className="input input-bordered rounded-xl focus:ring-2 focus:ring-pink-400 transition-shadow duration-300 shadow-sm"
+                value={activity.reg_close}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="form-control">
+              <label className="label font-semibold text-red-600">ผู้ติดต่อ</label>
+              <input
+                type="text"
+                name="contact_name"
+                className="input input-bordered rounded-xl focus:ring-2 focus:ring-pink-400 transition-shadow duration-300 shadow-sm"
+                value={activity.contact_name}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-control">
+              <label className="label font-semibold text-red-600">เบอร์โทร</label>
+              <input
+                type="text"
+                name="contact_phone"
+                className="input input-bordered rounded-xl focus:ring-2 focus:ring-pink-400 transition-shadow duration-300 shadow-sm"
+                value={activity.contact_phone}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-control">
+              <label className="label font-semibold text-red-600">อีเมล</label>
+              <input
+                type="email"
+                name="contact_email"
+                className="input input-bordered rounded-xl focus:ring-2 focus:ring-pink-400 transition-shadow duration-300 shadow-sm"
+                value={activity.contact_email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex justify-center gap-4 mt-6">
+            <button
+              type="submit"
+              className="btn w-32 bg-red-500 hover:bg-pink-400 text-white font-bold rounded-xl shadow-lg transition-transform transform hover:scale-105"
+            >
+              ✅ แก้ไข
+            </button>
+            <button
+              type="button"
+              className="btn w-32 btn-outline btn-error rounded-xl shadow-lg hover:scale-105 transition-transform"
+              onClick={() => navigate("/")}
+            >
+              ❌ ยกเลิก
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

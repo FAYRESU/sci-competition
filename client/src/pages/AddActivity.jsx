@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import Swal from "sweetalert2";
 import ActivityService from "../services/activity.service";
+
 const AddActivity = () => {
   const [activity, setActivity] = useState({
     name: "",
@@ -18,7 +19,9 @@ const AddActivity = () => {
     contact_email: "",
     status: "draft",
   });
+
   const navigate = useNavigate();
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setActivity({ ...activity, [name]: value });
@@ -41,6 +44,7 @@ const AddActivity = () => {
       status: "draft",
     });
   };
+
   const handleSubmit = async () => {
     try {
       const newActivity = await ActivityService.createActivity(activity);
@@ -62,247 +66,51 @@ const AddActivity = () => {
       });
     }
   };
+
   return (
-    <div className="flex flex-col items-center space-y-4">
-      <h1 className="text-3xl font-bold mb-4">Add new Activity</h1>
-      <label className="input input-bordered flex items-center gap-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="h-4 w-4 opacity-70"
+    <div className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-red-50 flex flex-col items-center py-10 px-4">
+      <h1 className="text-4xl font-extrabold text-red-600 mb-6">
+        Add New Activity
+      </h1>
+
+      <div className="w-full max-w-lg space-y-4">
+        {[
+          { name: "name", placeholder: "Activity Name" },
+          { name: "description", placeholder: "Description" },
+          { name: "type", placeholder: "Type" },
+          { name: "level", placeholder: "Level" },
+          { name: "team_size", placeholder: "Team Size", type: "number" },
+          { name: "date", placeholder: "Date", type: "date" },
+          { name: "location", placeholder: "Location" },
+          { name: "reg_open", placeholder: "Register Open Date", type: "date" },
+          { name: "reg_close", placeholder: "Register Close Date", type: "date" },
+          { name: "contact_name", placeholder: "Contact Name" },
+          { name: "contact_phone", placeholder: "Phone Number" },
+          { name: "contact_email", placeholder: "Email" },
+          { name: "status", placeholder: "Status" },
+        ].map((field) => (
+          <label key={field.name} className="input-group w-full">
+            <span className="bg-red-200 text-red-800 font-semibold">
+              {field.placeholder}
+            </span>
+            <input
+              type={field.type || "text"}
+              placeholder={field.placeholder}
+              name={field.name}
+              value={activity[field.name]}
+              onChange={handleChange}
+              className="input input-bordered input-sm flex-grow focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400"
+            />
+          </label>
+        ))}
+
+        <button
+          className="btn btn-outline btn-error w-full mt-4 hover:bg-pink-400 hover:text-white transition-colors"
+          onClick={handleSubmit}
         >
-          <path d="M2.5 3A1.5 1.5 0 0 0 1 4.5v.793c.026.009.051.02.076.032L7.674 8.51c.206.1.446.1.652 0l6.598-3.185A.755.755 0 0 1 15 5.293V4.5A1.5 1.5 0 0 0 13.5 3h-11Z" />
-          <path d="M15 6.954 8.978 9.86a2.25 2.25 0 0 1-1.956 0L1 6.954V11.5A1.5 1.5 0 0 0 2.5 13h11a1.5 1.5 0 0 0 1.5-1.5V6.954Z" />
-        </svg>
-        <input
-          type="text"
-          className="grow"
-          placeholder="Activity Name"
-          name="name"
-          value={activity.name}
-          onChange={handleChange}
-        />
-      </label>
-      <label className="input input-bordered flex items-center gap-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="h-4 w-4 opacity-70"
-        >
-          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
-        </svg>
-        <input
-          type="text"
-          className="grow"
-          placeholder="Description"
-          name="description"
-          value={activity.description}
-          onChange={handleChange}
-        />
-      </label>
-      <label className="input input-bordered flex items-center gap-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="h-4 w-4 opacity-70"
-        >
-          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
-        </svg>
-        <input
-          type="text"
-          className="grow"
-          placeholder="Type"
-          name="type"
-          value={activity.type}
-          onChange={handleChange}
-        />
-      </label>
-      <label className="input input-bordered flex items-center gap-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="h-4 w-4 opacity-70"
-        >
-          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
-        </svg>
-        <input
-          type="text"
-          className="grow"
-          placeholder="Level"
-          name="level"
-          value={activity.level}
-          onChange={handleChange}
-        />
-      </label>
-      <label className="input input-bordered flex items-center gap-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="h-4 w-4 opacity-70"
-        >
-          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
-        </svg>
-        <input
-          type="number"
-          className="grow"
-          placeholder="Team size"
-          name="team_size"
-          value={activity.team_size}
-          onChange={handleChange}
-        />
-      </label>
-      <label className="input input-bordered flex items-center gap-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="h-4 w-4 opacity-70"
-        >
-          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
-        </svg>
-        <input
-          type="date"
-          className="grow"
-          placeholder="Date"
-          name="date"
-          value={activity.date}
-          onChange={handleChange}
-        />
-      </label>
-      <label className="input input-bordered flex items-center gap-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="h-4 w-4 opacity-70"
-        >
-          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
-        </svg>
-        <input
-          type="text"
-          className="grow"
-          placeholder="Location"
-          name="location"
-          value={activity.location}
-          onChange={handleChange}
-        />
-      </label>
-      <label className="input input-bordered flex items-center gap-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="h-4 w-4 opacity-70"
-        >
-          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
-        </svg>
-        <input
-          type="date"
-          className="grow"
-          placeholder="Register Open Date"
-          name="reg_open"
-          value={activity.reg_open}
-          onChange={handleChange}
-        />
-      </label>
-      <label className="input input-bordered flex items-center gap-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="h-4 w-4 opacity-70"
-        >
-          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
-        </svg>
-        <input
-          type="date"
-          className="grow"
-          placeholder="Register Close Date"
-          name="reg_close"
-          value={activity.reg_close}
-          onChange={handleChange}
-        />
-      </label>
-      <label className="input input-bordered flex items-center gap-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="h-4 w-4 opacity-70"
-        >
-          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
-        </svg>
-        <input
-          type="text"
-          className="grow"
-          placeholder="Contact name"
-          name="contact_name"
-          value={activity.contact_name}
-          onChange={handleChange}
-        />
-      </label>
-      <label className="input input-bordered flex items-center gap-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="h-4 w-4 opacity-70"
-        >
-          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
-        </svg>
-        <input
-          type="text"
-          className="grow"
-          placeholder="Phone Number"
-          name="contact_phone"
-          value={activity.contact_phone}
-          onChange={handleChange}
-        />
-      </label>
-      <label className="input input-bordered flex items-center gap-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="h-4 w-4 opacity-70"
-        >
-          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
-        </svg>
-        <input
-          type="text"
-          className="grow"
-          placeholder="Email"
-          name="contact_email"
-          value={activity.contact_email}
-          onChange={handleChange}
-        />
-      </label>
-      <label className="input input-bordered flex items-center gap-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="h-4 w-4 opacity-70"
-        >
-          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
-        </svg>
-        <input
-          type="text"
-          className="grow"
-          placeholder="Status"
-          name="status"
-          value={activity.status}
-          onChange={handleChange}
-        />
-      </label>
-      <button className="btn btn-success" onClick={handleSubmit}>
-        Submit
-      </button>
+          Submit
+        </button>
+      </div>
     </div>
   );
 };
