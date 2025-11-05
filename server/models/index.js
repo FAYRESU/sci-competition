@@ -1,38 +1,25 @@
 import sequelize from "./db.js";
-import Sequelize from "sequelize"
-import User from "./user.model.js"
-import Role from "./role.model.js"
+import Sequelize from "sequelize"; // libralies
+import User from "./user.model.js";
 import Activity from "./activity.model.js";
 
+import VerificationToken from "./verificationToken.model.js";
 
 const db = {};
-
-
 // S ตัวเล็ก
+//import มาจาก db.js
 db.sequelize = sequelize;
 // S ตัวใหญ่
+//import มาจาก libralies
 db.Sequelize = Sequelize;
 
-
 db.User = User;
-db.Role = Role;
 db.Activity = Activity;
 
-// Association
-db.User.belongsToMany(db.Role, {
-    through: 'user_roles',
-    // as: 'roles',
-    foreignKey: "userId",
-    otherKey: "roleId",
-});
+db.VerificationToken = VerificationToken;
 
-
-db.Role.belongsToMany(db.User, {
-    through: 'user_roles',
-    // as: 'users',
-    foreignKey: "roleId",
-    otherKey: "userId",
-});
+//association
+db.VerificationToken.belongsTo(User, { foreignKey: "userId" });
 
 
 

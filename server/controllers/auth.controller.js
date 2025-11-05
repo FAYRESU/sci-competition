@@ -1,128 +1,151 @@
-import db from "../models/index.js";
-
-const User = db.User;
-const Role = db.Role;
-
-import config from "../config/auth.config.js";
-import bcrypt from "bcryptjs"; // ใช้เข้ารหัสของ password
 import jwt from "jsonwebtoken";
-import { Op } from "sequelize"; // import operator เช่น AND OR
+import authConfig from "../config/auth.config.js";
+import db from "../models/index.js"; //index เป็นคนชี้แจง
+import crypto from "crypto";
+import { sendVerificationEmail } from "../utils/email.js";
+import path from "path";
 
-const authController = {};
-authController.Register = async (req, res) => {
-  // user ส่ง ข้อมูลผ่าน body
-  const { username, fullName, email, password } = req.body;
+const User = db.User; //ข้างหน้าคือ class
 
-  // validate ข้อมูล ที่ user ส่งมา
-  if (!username || !fullName || !email || !password) {
-    res.status(400).send({ message: "Please provide all require fields." });
-    return;
-  }
-
-  // เช็ค username ซ้ำว่ากันไหม
-  // SQL = SELECT * FROM user WHERE username = username;
-  //await User.findOne({ where: {username: username} }).select(-password) // .select(-password) คือ ไม่ดึง field password มาแสดง
-  await User.findOne({
-    where: { username: username },
-    attributes: { exclude: ["password"] },
-  }) //.select('.password') คือ ไม่ดึง field password มาแสดง
-    .then((user) => {
-      // ถ้ามี username อยู่แล้วจะไม่ให้ทำ process ต่อไป
-      if (user) {
-        res.status(400).send({ message: "Username is already existed." });
-        return;
-      }
-
-      const newUser = {
-        username: username,
-        fullName: fullName,
-        email: email,
-        password: bcrypt.hashSync(password, 8),
-      
-      };
-
-      User.create(newUser)
-        .then((user) => {
-          // เช็คว่า user ส่ง role มาด้วยไหม
-          // send roles in body [ADMIN] *แอดมินเป็นคนส่งมา
-          if (req.body.roles) {
-            // นำ roles ที่ส่งมา เทียบกับ role ที่อยู่ใน table
-            // SQL = SELECT * FROM ROLE WHERE roleName = role1 OR roleName = role2 OR roleName = role3
-            Role.findAll({
-              where: {
-                name: { [Op.or]: req.body.roles }, // เช็ค roles ที่ส่งมา
-              },
-            }).then((roles) => {
-              user.setRoles(roles).then(() => {
-                res.send({ message: "User registered successfully" });
-              });
-            });
-          } else {
-            // ใส่ค่า default role เป็น user
-            // user สมัคร
-            user.setRoles([3]).then(() => {
-              res.send({ message: "User registered successfully" });
-            });
-          }
-        })
-        .catch((err) => {
-          res.status(500).send({
-            message:
-              err.message || "Something error while registering a new user",
-          });
-        });
-    });
-};
-
-authController.signIn = async (req, res) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    res.status(400).send({ message: "Username or Password are missing." });
-    return;
-  }
-
+//Register
+const signUp = async (req, res) => {
+  const { email, password, type, name, school, phone } = req.body;
   try {
-    const user = await User.findOne({ where: { username } });
-
-    if (!user) {
-      return res.status(404).send({ message: "User Not Found!" });
+    //Check varidation request
+    if (!email || !password || !type || !name) {
+      return res
+        .status(400)
+        .send({ message: "Email, Password, Type and Name are reqiured !" });
     }
 
-    const passwordIsValid = bcrypt.compareSync(password, user.password);
-    if (!passwordIsValid) {
-      return res.status(401).send({ message: "Invalid password" });
+    const allowedType = ["admin", "teacher", "judge"];
+    //เช็คว่า type ตรงไหม
+    if (!allowedType.includes(type)) {
+      return res.status(400).send({
+        message: "Invalid user type. Must be admin, teacher or judge",
+      });
+    }
+    //Addition validation for teacher
+    if (type === "teacher" && (!school || !phone)) {
+      return res.status(400).send({
+        message: "School and Phone are required for teacher!",
+      });
     }
 
-    // สร้าง token
-    const token = jwt.sign({ username: user.username }, config.secret, {
-      expiresIn: 60 * 60 * 24, // 24 ชั่วโมง
-    });
-
-    // ดึง role ที่ผู้ใช้มี
-    const roles = await user.getRoles();
-    const authorities = [];
-
-    roles.forEach((role) => {
-      if (role && role.roleName) {
-        authorities.push("ROLES_" + role.roleName.toUpperCase());
-      }
-    });
-
-    res.status(200).send({
-      token: token,
-      authorities: authorities,
-      userInfo: {
-        name: user.name,
-        email: user.email,
-        username: user.username,
+    //check if user already exists
+    //await คือหยุดทำงาน ต่อ if ได้เลย
+    const existingUser = await User.findOne({
+      where: {
+        email: email,
       },
     });
-  } catch (err) {
-    res.status(500).send({
-      message: err.message || "Something went wrong while signing in.",
+
+    if (existingUser) {
+      return res.status(400).send({ message: "Email already in use!" });
+    }
+
+    //Create user object base on type
+    const userData = {
+      name: name,
+      email: email,
+      password: password,
+      type: type,
+      isVerified: false,
+    };
+    if (type === "teacher") {
+      userData.school = school;
+      userData.phone = phone;
+    }
+
+    //Create new User
+    const user = await User.create(userData);
+
+    //If user is a teacher, create and send verification email
+    //create token teacher
+    if (type === "teacher") {
+      try {
+        //create verification token
+        //บันทึกฐานข้อมูลเรียบร้อยแล้ว
+        const token = crypto.randomBytes(32).toString("hex"); //เลขฐาน 16
+        const verification = await db.VerificationToken.create({
+          token,
+          userId: user.id,
+          expiredAt: new Date(Date.now() + 24 * 60 * 60 * 1000), //24 h
+        });
+        console.log("Verification token created", verification);
+
+        await sendVerificationEmail(user.email, token, user.name);
+        console.log("Verification email sent successfully!");
+        //send Email
+      } catch (error) {
+        console.log("Error sending verification email", error);
+      }
+    }
+
+    res.status(201).send({
+      message:
+        user.type === "teacher"
+          ? "Registration successfully! Please check your email to verifity your accouct"
+          : " User registered successfully!",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        type: user.type,
+        ...(user.type === "teacher" && { isVerified: user.isVerified }),
+      },
+    });
+  } catch (error) {
+    return res.status(500).send({
+      message: error.message || "Some error occurred ehile creating the user",
     });
   }
+};
+
+const verifyEmail = async (req, res) => {
+  const { token } = req.params;
+  if (!token) {
+    return res.status(400).send({ message: "Token is missing!" });
+  }
+  try {
+    const verificationToken = await db.VerificationToken.findOne({
+      where: { token: token },
+    });
+    if (!verificationToken) {
+      return res.status(400).send({ message: "Invalid or expired token!" });
+    }
+    //Check if token is expired
+    if (new Date() > verificationToken.expiredAt) {
+      await verificationToken.destroy();
+      return res.status(400).send({
+        message: "Versification token has expired. Please request a new one.",
+      });
+    }
+    //ทำการดึง user มาก่อน
+    const user = await User.findByPk(verificationToken.userId);
+    if (!user) {
+      return res.status(404).send({ message: "User not found!" });
+    }
+    //ตั๋วยังไม่หมดอายุ และ user มีอยู่ ต้องเปลี่ยนสถานะ
+    await user.update({ isVerified: true });
+    await verificationToken.destroy(); //ลบ token ทิ้ง ใช้แบบ one time
+    //ต้องรีเทิร์นหน้า web views
+    const htmlPath = path.join(
+      process.cwd(),
+      "views", //ที่อยู่ project
+      "verification-success.html"
+    ); //views/verification-success.html
+    res.sendFile(htmlPath);
+  } catch (error) {
+    return res.status(500).send({
+      message: error.message || "Some error occurred while verifying user",
+    });
+  }
+};
+
+const authController = {
+  signUp,
+  verifyEmail,
 };
 
 export default authController;

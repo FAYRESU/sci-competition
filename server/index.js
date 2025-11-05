@@ -7,9 +7,25 @@ const PORT = process.env.PORT || 5000;
 import authRouter from "./routers/auth.router.js";
 import db from "./models/index.js";
 const FRONTEND_URL = process.env.FRONTEND_URL;
-import ActivityRouter from "./routers/activity.router.js"
+import ActivityRouter from "./routers/activity.router.js";
+const NODE_ENV = process.env.NODE_ENV;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+const initDatabase = async () => {
+  try {
+    await db.sequelize.authenticate();
+    console.log("Database connection established successfully!");
+    // if (NODE_ENV === "development") {
+      await db.sequelize.sync({ alter: true });
+      console.log("database synced in development mode");
+    // }
+  } catch (error) {
+    console.log("Unable to connect to database", error);
+  }
+};
+initDatabase();
+
 const Role = db.Role;
 // Function to initialize roles
 // const initRole = async () => {
@@ -59,7 +75,7 @@ app.use(
 // Routers
 
 app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/auth", ActivityRouter);
+app.use("/api/v1/", ActivityRouter);
 
 // Start server
 app.listen(PORT, () => {
