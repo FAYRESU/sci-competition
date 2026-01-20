@@ -1,128 +1,215 @@
-import db from "../models/index.js";
-
-const User = db.User;
-const Role = db.Role;
-
-import config from "../config/auth.config.js";
-import bcrypt from "bcryptjs"; // ใช้เข้ารหัสของ password
 import jwt from "jsonwebtoken";
-import { Op } from "sequelize"; // import operator เช่น AND OR
+import authConfig from "../config/auth.config.js";
+import db from "../models/index.js";
+import crypto from "crypto";
+import path from "path";
+const User = db.User;
+import { sendVerificationEmail } from "../utils/email.js";
 
-const authController = {};
-authController.Register = async (req, res) => {
-  // user ส่ง ข้อมูลผ่าน body
-  const { username, fullName, email, password } = req.body;
+//Register
+const signUp = async (req, res) => {
+  const { email, password, type, name, school, phone } = req.body;
+  console.log(email, password, type, name, school, phone);
 
-  // validate ข้อมูล ที่ user ส่งมา
-  if (!username || !fullName || !email || !password) {
-    res.status(400).send({ message: "Please provide all require fields." });
-    return;
-  }
+  try {
+    //Validate request
+    if (!email || !password || !type || !name) {
+      return res
+        .status(400)
+        .send({ message: "Email, password, type and name are required !" });
+    }
 
-  // เช็ค username ซ้ำว่ากันไหม
-  // SQL = SELECT * FROM user WHERE username = username;
-  //await User.findOne({ where: {username: username} }).select(-password) // .select(-password) คือ ไม่ดึง field password มาแสดง
-  await User.findOne({
-    where: { username: username },
-    attributes: { exclude: ["password"] },
-  }) //.select('.password') คือ ไม่ดึง field password มาแสดง
-    .then((user) => {
-      // ถ้ามี username อยู่แล้วจะไม่ให้ทำ process ต่อไป
-      if (user) {
-        res.status(400).send({ message: "Username is already existed." });
-        return;
-      }
+    //Validate user type
+    const allowedTypes = ["admin", "teacher", "judge"];
+    if (!allowedTypes.includes(type)) {
+      return res.status(400).send({
+        message: "Invalid user type. Must be admin, teacher or judge",
+      });
+    }
+    //Addition validation for teacher
+    if (type === "teacher" && (!school || !phone)) {
+      return res
+        .status(400)
+        .send({ message: "school and phone are required for teacher!" });
+    }
 
-      const newUser = {
-        username: username,
-        fullName: fullName,
+    //check if user already exists
+    const existingUser = await User.findOne({
+      where: {
         email: email,
-        password: bcrypt.hashSync(password, 8),
-      
-      };
-
-      User.create(newUser)
-        .then((user) => {
-          // เช็คว่า user ส่ง role มาด้วยไหม
-          // send roles in body [ADMIN] *แอดมินเป็นคนส่งมา
-          if (req.body.roles) {
-            // นำ roles ที่ส่งมา เทียบกับ role ที่อยู่ใน table
-            // SQL = SELECT * FROM ROLE WHERE roleName = role1 OR roleName = role2 OR roleName = role3
-            Role.findAll({
-              where: {
-                name: { [Op.or]: req.body.roles }, // เช็ค roles ที่ส่งมา
-              },
-            }).then((roles) => {
-              user.setRoles(roles).then(() => {
-                res.send({ message: "User registered successfully" });
-              });
-            });
-          } else {
-            // ใส่ค่า default role เป็น user
-            // user สมัคร
-            user.setRoles([3]).then(() => {
-              res.send({ message: "User registered successfully" });
-            });
-          }
-        })
-        .catch((err) => {
-          res.status(500).send({
-            message:
-              err.message || "Something error while registering a new user",
-          });
-        });
+      },
     });
+    if (existingUser) {
+      return res.status(400).send({ message: "Email already in use!" });
+    }
+
+    //Create user object base on type
+    const userData = {
+      name: name,
+      email: email,
+      password: password,
+      type: type,
+      isVerified: false,
+    };
+    if (type === "teacher") {
+      userData.school = school;
+      userData.phone = phone;
+    }
+    // console.log("userData:", userData);
+
+    //Create new user
+    const user = await User.create(userData);
+    // console.log(user);
+
+    //If user is a teacher, create and send verification email
+    if (type === "teacher") {
+      try {
+        //create verification token
+        const token = crypto.randomBytes(32).toString("hex");
+        const verification = await db.VerificationToken.create({
+          token,
+          userId: user.id,
+          expiredAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
+        });
+        console.log("Verification token created", verification);
+
+        //Send verification email
+
+        await sendVerificationEmail(user.email, token, user.name);
+        console.log("Verification email sent successfully!");
+      } catch (error) {
+        console.error("Error sending verification email", error);
+      }
+    }
+
+    res.status(201).send({
+      message:
+        user.type === "teacher"
+          ? "Registration successfully! Please check your email to verify your account"
+          : "User registered successfully!",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        type: user.type,
+        ...(user.type === "teacher" && { isVerified: user.isVerified }),
+      },
+    });
+  } catch (error) {
+    return res.status(500).send({
+      message: error.message || "Some error occurred while creating the user",
+    });
+  }
 };
 
-authController.signIn = async (req, res) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    res.status(400).send({ message: "Username or Password are missing." });
-    return;
+const verifyEmail = async (req, res) => {
+  const { token } = req.params;
+  if (!token) {
+    return res.status(400).send({ message: "Token is missing!" });
   }
 
   try {
-    const user = await User.findOne({ where: { username } });
-
+    const verificationToken = await db.VerificationToken.findOne({
+      where: { token },
+    });
+    if (!verificationToken) {
+      return res.status(404).send({ message: "Invalid verification token" });
+    }
+    //Check if token is expired
+    if (new Date() > verificationToken.expiredAt) {
+      await verificationToken.destroy();
+      return res
+        .status(400)
+        .send({ message: "Verification token has expired" });
+    }
+    const user = await User.findByPk(verificationToken.userId);
     if (!user) {
-      return res.status(404).send({ message: "User Not Found!" });
+      return res.status(404).send({ message: "User not found" });
+    }
+    await user.update({ isVerified: true });
+    await verificationToken.destroy();
+    //return web view
+    const htmlPath = path.join(
+      process.cwd(),
+      "views",
+      "verification-success.html"
+    );
+    res.sendFile(htmlPath);
+  } catch (error) {
+    return res.status(500).send({
+      message: error.message || "Some error occurred while verifying the user",
+    });
+  }
+};
+
+const signIn = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    if (!email || !password) {
+      return res
+        .status(400)
+        .send({ message: "Email and password are required!" });
     }
 
-    const passwordIsValid = bcrypt.compareSync(password, user.password);
-    if (!passwordIsValid) {
+    const user = await User.findOne({
+      where: { email },
+    });
+
+    if (!user) {
+      return res.status(404).send({ message: "User not found!" });
+    }
+
+    const passwordIsvalid = await user.comparePassword(password);
+    if (!passwordIsvalid) {
       return res.status(401).send({ message: "Invalid password" });
     }
 
-    // สร้าง token
-    const token = jwt.sign({ username: user.username }, config.secret, {
-      expiresIn: 60 * 60 * 24, // 24 ชั่วโมง
+    if (user.type === "teacher" && !user.isVerified) {
+      return res.status(403).send({
+        message: "Please verify your email to activate your account!",
+      });
+    }
+
+    const token = jwt.sign({ id: user.id }, authConfig.secret, {
+      expiresIn: 24 * 60 * 60, // 86400 sec = 24h
     });
-
-    // ดึง role ที่ผู้ใช้มี
-    const roles = await user.getRoles();
-    const authorities = [];
-
-    roles.forEach((role) => {
-      if (role && role.roleName) {
-        authorities.push("ROLES_" + role.roleName.toUpperCase());
-      }
-    });
-
-    res.status(200).send({
-      token: token,
-      authorities: authorities,
-      userInfo: {
+    // const userData = {
+    //   id: user.id,
+    //   name: user.name,
+    //   email: user.email,
+    //   type: user.type,
+    // };
+    // if (user.type === "teacher") {
+    //   userData.isVerified = user.isVerified;
+    //   userData.phone = user.phone;
+    //   userData.school = user.school;
+    // }
+    // condition ? (true): (false);
+    return res.status(200).send({
+      message: "Login successfully",
+      user: {
+        id: user.id,
         name: user.name,
         email: user.email,
-        username: user.username,
+        type: user.type,
+        ...(user.type === "teacher" && {
+          isVerified: user.isVerified,
+          phone: user.phone,
+          school: user.school,
+        }),
       },
+      accessToken: token,
     });
-  } catch (err) {
-    res.status(500).send({
-      message: err.message || "Something went wrong while signing in.",
+  } catch (error) {
+    return res.status(500).send({
+      message: error.message || "Some error occurred while logging in user",
     });
   }
+};
+const authController = {
+  signUp,
+  signIn,
+  verifyEmail,
 };
 
 export default authController;

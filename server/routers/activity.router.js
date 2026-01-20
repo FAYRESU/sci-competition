@@ -1,13 +1,36 @@
 import express from "express";
 const router = express.Router();
-import activityControllers from "../controllers/activity.controller";
-import { verifyToken, isAdmin, isManager } from "../middleware/authJwt";
-router.get("/activities", activityControllers.getAllActivities);
-router.get("/activities/:id", activityControllers.getActivitiesById);
-router.post("/activities", activityControllers.createActivity);
-router.put("/activities/:id", activityControllers.updateActivity);
-router.delete("/activities/:id", activityControllers.deleteActivity);
-router.get("/activities/search", activityControllers.searchActivities);
+import activityController from "../controllers/activity.controller.js";
+import AuthMiddleware from "../middleware/authJwt.js";
 
+// Create a new activity
+router.post(
+  "/",
+  [AuthMiddleware.verifyToken, AuthMiddleware.isAdmin, AuthMiddleware.isTeacher],
+  activityController.createActivity
+);
+
+// Get all activities
+router.get("/", activityController.getAllActivities);
+
+// Get activity by ID
+router.get("/:id", activityController.getActivityById);
+
+// Update activity by ID
+router.put(
+  "/:id",
+  [AuthMiddleware.verifyToken, AuthMiddleware.isAdmin],
+  activityController.updateActivity
+);
+
+// Delete activity by ID
+router.delete(
+  "/:id",
+  [AuthMiddleware.verifyToken, AuthMiddleware.isAdmin],
+  activityController.deleteActivity
+);
+
+// Search activities
+router.get("/search", activityController.searchActivities);
 
 export default router;
